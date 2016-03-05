@@ -23,6 +23,26 @@
             var data = []
             var sharkData = []
 
+            var fishFns = {
+                energyOf: function (currPos) { return fishAt(currPos) > 0 ? 1 : 0 },
+                decideMove: function (currPos) { return nextSpot(waterAt, currPos) },
+                ageOf: function (currPos) { return fishAt(currPos) },
+                shouldReproduce: function(age) { return (1 == (age % 7)) },
+                makeNew: function (age) { return (1 == (age % 7)) },
+                removeAt: function (currPos) { fishAt(currPos, 0) },
+                moveThis: function moveThisFish(newPos, age) { fishAt(newPos, (age % 7) + 1) }
+            }
+
+            var sharkFns = {
+                energyOf: sharkEnergy,
+                decideMove: sharkDecideMove,
+                ageOf: function (currPos) { return sharkAt(currPos) % 16 },
+                shouldReproduce: function (age) { return age == sharkReproAge - 1 },
+                makeNew: function (currPos) { sharkAt(currPos, sharkEnergyLevel * 16) },
+                removeAt: function (currPos) { sharkAt(currPos, 0) },
+                moveThis: moveThisShark
+            }
+
             function setup() {
                 var table = $('<table>')
                 for (var i = 0; i < rows; i++) {
@@ -101,41 +121,14 @@
                 fishAt(currPos, 1)
             }
 
-            function removeFishAt(currPos) {
-                fishAt(currPos, 0)
-            }
 
-            function moveThisFish(newPos, age) {
-                fishAt(newPos, (age % 7) + 1)
-            }
 
-            function fishShouldReproduce(age) {
-                return (1 == (age % 7))
-            }
 
-            function fishAge(currPos) {
-                return fishAt(currPos)
-            }
 
-            function fishEnergy(currPos) {
-                return fishAt(currPos) > 0 ? 1 : 0
-            }
 
-            function fishDecideMove(currPos) {
-                return nextSpot(waterAt, currPos)
-            }
 
             function moveFish() {
-                var fns = {
-                    energyOf: fishEnergy,
-                    decideMove: fishDecideMove,
-                    ageOf: fishAge,
-                    shouldReproduce: fishShouldReproduce,
-                    makeNew: newFishAt,
-                    removeAt: removeFishAt,
-                    moveThis: moveThisFish
-                }
-                move(fns)
+                move(fishFns)
             }
 
             function up(y,x) {
@@ -184,21 +177,8 @@
                 return sharkData[pos['row']][pos['col']]
             }
 
-            function fishTo(start, finish) {
-                data[finish['row']][finish['col']] = data[start['row']][start['col']]
-            }
-            function sharkTo(start, finish) {
-                sharkData[finish['row']][finish['col']] = sharkData[start['row']][start['col']]
-            }
-
-            function sharkOrFishAt(pos) {
-                return sharkAt(pos) > 0 || fishAt(pos) > 0
-            }
-            function fishButNotShark(pos) {
-                return sharkAt(pos) == 0 && fishAt(pos) > 0
-            }
             function waterAt(pos) {
-                return !sharkOrFishAt(pos)
+                return sharkAt(pos) == 0 && fishAt(pos) == 0
             }
 
 
@@ -210,13 +190,7 @@
                 return v - 1
             }
 
-            function newSharkAt(currPos) {
-                sharkAt(currPos, sharkEnergyLevel * 16)
-            }
 
-            function removeSharkAt(currPos) {
-                sharkAt(currPos, 0)
-            }
 
             function moveThisShark(newPos, age, energy) {
                 if (fishAt(newPos) > 0) {
@@ -233,13 +207,7 @@
                 }
             }
 
-            function sharkShouldReproduce(age) {
-                return age == sharkReproAge - 1
-            }
 
-            function sharkAge(currPos) {
-                return sharkAt(currPos) % 16
-            }
 
             function sharkDecideMove(currPos) {
                 var newPos = nextSpot(fishAt, currPos)
@@ -250,17 +218,7 @@
             }
 
             function moveSharks() {
-                var fns = {
-                    energyOf: sharkEnergy,
-                    decideMove: sharkDecideMove,
-                    ageOf: sharkAge,
-                    shouldReproduce: sharkShouldReproduce,
-                    makeNew: newSharkAt,
-                    removeAt: removeSharkAt,
-                    moveThis: moveThisShark
-
-                }
-                move(fns)
+                move(sharkFns)
             }
             function move(fns) {
                 if (!run) return;
