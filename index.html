@@ -135,34 +135,7 @@
                     removeAt: removeFishAt,
                     moveThis: moveThisFish
                 }
-                if (!run) return
-                for (var row = 0; row < rows; row++) {
-                    for (var col = 0; col < cols; col++) {
-                        var currPos = {row: row, col: col}
-                        if (fns.energyOf(currPos)) {
-                            var hasMoved = true
-                            var newPos = fishDecideMove(currPos)
-                            if (newPos == null) {
-                                newPos = currPos
-                                hasMoved = false
-                            }
-
-                            var age = fishAge(currPos)
-                            var energy = fishEnergy(currPos)
-
-                            if (hasMoved) {
-                                if (fishShouldReproduce(age)) {
-                                    newFishAt(currPos)
-                                } else {
-                                    removeFishAt(currPos)
-                                }
-                            }
-                            moveThisFish(newPos, age, energy)
-                        } else {
-                            removeFishAt(currPos)
-                        }
-                    }
-                }
+                move(fns)
             }
 
             function up(y,x) {
