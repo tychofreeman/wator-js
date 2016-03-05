@@ -97,9 +97,24 @@
                 }
             }
 
+            function identity(x) { return x }
+            function inc(x) { return x + 1 }
+            function dec(x) { return x - 1 }
+
+            function dirFn(xfn, yfn) {
+                return function(pos) {
+                    x = pos['row']
+                    y = pos['col']
+                    return {row: (xfn(x) + rows) % rows , col: (yfn(y) + cols) % cols }
+                }
+            }
+
             function allPossibleNextPositions(isAvailableFn, currPos) {
                 available = []
-                fns = [up, right, left, down]
+                fns = [ dirFn(dec, identity), 
+                        dirFn(inc, identity),
+                        dirFn(identity, dec),
+                        dirFn(identity, inc)]
                 for (var i = 0; i < fns.length; i++) {
                     possibleNextPos = fns[i](currPos)
                     if (isAvailableFn(possibleNextPos)) {
@@ -119,32 +134,6 @@
             function nextSpot(isAvailableFn, currPos) {
                 available = allPossibleNextPositions(isAvailableFn, currPos)
                 return randomElementOf(available)
-            }
-
-            function newFishAt(currPos) {
-                fishAt(currPos, 1)
-            }
-
-            function identity(x) { return x }
-            function inc(x) { return x + 1 }
-            function dec(x) { return x - 1 }
-
-            function direction(xfn, yfn, pos) {
-                x = pos['row']
-                y = pos['col']
-                return {row: (xfn(x) + rows) % rows , col: (yfn(y) + cols) % cols }
-            }
-            function up(pos) {
-                return direction(dec, identity, pos)
-            }
-            function down(pos) {
-                return direction(inc, identity, pos)
-            }
-            function left(pos) {
-                return direction(identity, dec, pos)
-            }
-            function right(pos) {
-                return direction(identity, inc, pos)
             }
 
             function fishAt(pos, newVal) {
