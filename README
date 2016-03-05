@@ -1,0 +1,3 @@
+This is a horrible implementation of Wa-Tor.
+
+I'd like to convert this to have mostly pure functions instead of side-effecty functions.

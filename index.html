@@ -59,8 +59,10 @@
                     }
                 }
                 $('#board').append(table)
+
                 make(data, startFish, 'fish', fishEnergyLevel)
                 make(sharkData, startSharks, 'shark', sharkEnergyLevel * 16)
+
                 window.setInterval(moveAll, 200);
             }
 
