@@ -54,7 +54,6 @@
                 for (var i = 0; i < numberOf; i++ ) {
                     col = Math.floor(cols * Math.random())
                     row = Math.floor(rows * Math.random())
-                    $('table tr')[row].childNodes[col].setAttribute('class', className)
                     data[row][col] = energyLevel
                 }
             }
@@ -74,50 +73,84 @@
                 }
             }
 
-            function nextSpot(isAvailable, currPos) {
+            function allPossibleNextPositions(isAvailableFn, currPos) {
                 available = []
-                if (isAvailable(up(currPos))) {
-                    available.push(up(currPos))
+                fns = [up, down, left, right]
+                for (var i = 0; i < fns.length; i++) {
+                    possibleNextPos = fns[i](currPos)
+                    if (isAvailableFn(possibleNextPos)) {
+                        available.push(possibleNextPos)
+                    }
                 }
-                if (isAvailable(down(currPos))) {
-                     available.push(down(currPos))
-                 }
-                 if (isAvailable(left(currPos))) {
-                    available.push(left(currPos))
-                }
-                if (isAvailable(right(currPos))) {
-                    available.push(right(currPos))
-                }
+                return available
+            }
+
+            function randomElementOf(available) {
                 if (available.length > 0 ){
                     return available[Math.floor(Math.random() * available.length)]
                 }
                 return null
             }
 
+            function nextSpot(isAvailableFn, currPos) {
+                available = allPossibleNextPositions(isAvailableFn, currPos)
+                return randomElementOf(available)
+            }
+
+            function newFishAt(currPos) {
+                fishAt(currPos, 1)
+            }
+
+            function removeFishAt(currPos) {
+                fishAt(currPos, 0)
+            }
+
+            function moveThisFish(newPos, age) {
+                fishAt(newPos, (age % 7) + 1)
+            }
+
+            function fishShouldReproduce(age) {
+                return (1 == (age % 7))
+            }
+
+            function fishAge(currPos) {
+                return fishAt(currPos)
+            }
+
+            function fishEnergy() {
+                return 1
+            }
+
+            function fishDecideMove(currPos) {
+                return nextSpot(waterAt, currPos)
+            }
+
             function moveFish() {
                 if (!run) return;
                 for (var row = 0; row < rows; row++) {
                     for (var col = 0; col < cols; col++) {
-                        if (data[row][col] > 0) {
-                            var currPos = {row: row, col: col}
-                            var newPos = {row: row, col: col}
+                        var currPos = {row: row, col: col}
+                        if (fishAt(currPos) > 0) {
                             var hasMoved = true
-                            newPos = nextSpot(waterAt, currPos)
+                            var newPos = fishDecideMove(currPos)
                             if (newPos == null) {
                                 newPos = currPos
                                 hasMoved = false
                             }
 
-                            var age = fishAt(currPos)
-                            var shouldNotReproduce = (1 != (age % 7))
+                            var age = fishAge(currPos)
+                            var energy = fishEnergy(currPos)
+
                             if (hasMoved) {
-                                fishAt(newPos, age + 1)
-                                if (shouldNotReproduce) {
-                                    fishAt(currPos, 0)
+                                if (fishShouldReproduce(age)) {
+                                    newFishAt(currPos)
                                 } else {
-                                    fishAt(currPos, 1)
+                                    removeFishAt(currPos)
                                 }
                             }
+                            moveThisFish(newPos, age, energy)
+                        } else {
+                            removeFishAt(currPos)
                         }
                     }
                 }
@@ -192,7 +225,46 @@
                 if (newEnergyLevel != null) {
                     sharkAt(pos, v * 16 + (v % 16))
                 }
-                return v
+                return v - 1
+            }
+
+            function newSharkAt(currPos) {
+                sharkAt(currPos, sharkEnergyLevel * 16)
+            }
+
+            function removeSharkAt(currPos) {
+                sharkAt(currPos, 0)
+            }
+
+            function moveThisShark(newPos, age, energy) {
+                if (fishAt(newPos) > 0) {
+                    fishAt(newPos, 0)
+                    energy += 3
+                    if (energy > sharkEnergyLevel) {
+                        energy = sharkEnergyLevel
+                    }
+                }
+                if (energy == 0) {
+                    sharkAt(newPos, 0)
+                } else {
+                    sharkAt(newPos, energy * 16 + ((age + 1) % sharkReproAge))
+                }
+            }
+
+            function sharkShouldReproduce(age) {
+                return age == sharkReproAge - 1
+            }
+
+            function sharkAge(currPos) {
+                return sharkAt(currPos) % 16
+            }
+
+            function sharkDecideMove(currPos) {
+                var newPos = nextSpot(fishAt, currPos)
+                if (newPos == null) {
+                    newPos = nextSpot(waterAt, currPos)
+                }
+                return newPos
             }
 
             function moveSharks() {
@@ -201,40 +273,25 @@
                     for (var col = 0; col < cols; col++) {
                         var currPos = {row: row, col: col}
                         if (sharkEnergy(currPos) > 0) {
-                            var newPos = {row: row, col: col}
                             var hasMoved = true
-                            newPos = nextSpot(fishAt, currPos)
+                            newPos = sharkDecideMove(currPos)
                             if (newPos == null) {
-                                newPos = nextSpot(waterAt, currPos)
-                                if (newPos == null) {
-                                    hasMoved = false
-                                    newPos = currPos
-                                }
+                                hasMoved = false
+                                newPos = currPos
                             }
 
-                            var age = sharkAt(currPos) % 16
-                            var energy = sharkEnergy(currPos) - 1
-                            var shouldReproduce = (age == sharkReproAge - 1)
+
+                            var age = sharkAge(currPos)
+                            var energy = sharkEnergy(currPos)
 
                             if (hasMoved) {
-                                if( shouldReproduce) {
-                                    sharkAt(currPos, sharkEnergyLevel * 16)
+                                if (sharkShouldReproduce(age)) {
+                                    newSharkAt(currPos)
                                 } else {
-                                    sharkAt(currPos, 0)
+                                    removeSharkAt(currPos)
                                 }
                             }
-                            if (fishAt(newPos) > 0) {
-                                fishAt(newPos, 0)
-                                energy += 3
-                                if (energy > sharkEnergyLevel) {
-                                    energy = sharkEnergyLevel
-                                }
-                            }
-                            if (energy == 0) {
-                                sharkAt(newPos, 0)
-                            } else {
-                                sharkAt(newPos, energy * 16 + ((age + 1) % sharkReproAge))
-                            }
+                            moveThisShark(newPos, age, energy)
                         } else {
                             sharkAt(currPos, 0)
                         }
