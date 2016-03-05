@@ -95,7 +95,7 @@
 
             function allPossibleNextPositions(isAvailableFn, currPos) {
                 available = []
-                fns = [up, down, left, right]
+                fns = [up, right, left, down]
                 for (var i = 0; i < fns.length; i++) {
                     possibleNextPos = fns[i](currPos)
                     if (isAvailableFn(possibleNextPos)) {
@@ -121,38 +121,26 @@
                 fishAt(currPos, 1)
             }
 
+            function identity(x) { return x }
+            function inc(x) { return x + 1 }
+            function dec(x) { return x - 1 }
 
-            function up(y,x) {
-                if (x == null) {
-                    x = y['row']
-                    y = y['col']
-                }
-                if( x == 0 ) return {row: rows - 1, col: y }
-                else return {row: x - 1, col: y }
+            function direction(xfn, yfn, pos) {
+                x = pos['row']
+                y = pos['col']
+                return {row: (xfn(x) + rows) % rows , col: (yfn(y) + cols) % cols }
             }
-            function down(y,x) {
-                if (x == null) {
-                    x = y['row']
-                    y = y['col']
-                }
-                if( x == rows - 1 ) return {row: 0, col: y }
-                else return {row: x + 1, col: y }
+            function up(pos) {
+                return direction(dec, identity, pos)
             }
-            function left(y,x) {
-                if (x == null) {
-                    x = y['row']
-                    y = y['col']
-                }
-                if( y == 0 ) return {row: x, col: cols - 1 }
-                else return {row: x, col: y - 1 }
+            function down(pos) {
+                return direction(inc, identity, pos)
             }
-            function right(y,x) {
-                if (x == null) {
-                    x = y['row']
-                    y = y['col']
-                }
-                if( y == cols - 1 ) return {row: x, col: 0 }
-                else return {row: x, col: y + 1 }
+            function left(pos) {
+                return direction(identity, dec, pos)
+            }
+            function right(pos) {
+                return direction(identity, inc, pos)
             }
 
             function fishAt(pos, newVal) {
