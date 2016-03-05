@@ -117,8 +117,8 @@
                 return fishAt(currPos)
             }
 
-            function fishEnergy() {
-                return 1
+            function fishEnergy(currPos) {
+                return fishAt(currPos) > 0 ? 1 : 0
             }
 
             function fishDecideMove(currPos) {
@@ -126,11 +126,20 @@
             }
 
             function moveFish() {
-                if (!run) return;
+                var fns = {
+                    energyOf: fishEnergy,
+                    decideMove: fishDecideMove,
+                    ageOf: fishAge,
+                    shouldReproduce: fishShouldReproduce,
+                    makeNew: newFishAt,
+                    removeAt: removeFishAt,
+                    moveThis: moveThisFish
+                }
+                if (!run) return
                 for (var row = 0; row < rows; row++) {
                     for (var col = 0; col < cols; col++) {
                         var currPos = {row: row, col: col}
-                        if (fishAt(currPos) > 0) {
+                        if (fns.energyOf(currPos)) {
                             var hasMoved = true
                             var newPos = fishDecideMove(currPos)
                             if (newPos == null) {
@@ -268,32 +277,45 @@
             }
 
             function moveSharks() {
+                var fns = {
+                    energyOf: sharkEnergy,
+                    decideMove: sharkDecideMove,
+                    ageOf: sharkAge,
+                    shouldReproduce: sharkShouldReproduce,
+                    makeNew: newSharkAt,
+                    removeAt: removeSharkAt,
+                    moveThis: moveThisShark
+
+                }
+                move(fns)
+            }
+            function move(fns) {
                 if (!run) return;
                 for (var row = 0; row < rows; row++) {
                     for (var col = 0; col < cols; col++) {
                         var currPos = {row: row, col: col}
-                        if (sharkEnergy(currPos) > 0) {
+                        if (fns.energyOf(currPos) > 0) {
                             var hasMoved = true
-                            newPos = sharkDecideMove(currPos)
+                            var newPos = fns.decideMove(currPos)
                             if (newPos == null) {
                                 hasMoved = false
                                 newPos = currPos
                             }
 
 
-                            var age = sharkAge(currPos)
-                            var energy = sharkEnergy(currPos)
+                            var age = fns.ageOf(currPos)
+                            var energy = fns.energyOf(currPos)
 
                             if (hasMoved) {
-                                if (sharkShouldReproduce(age)) {
-                                    newSharkAt(currPos)
+                                if (fns.shouldReproduce(age)) {
+                                    fns.makeNew(currPos)
                                 } else {
-                                    removeSharkAt(currPos)
+                                    fns.removeAt(currPos)
                                 }
                             }
-                            moveThisShark(newPos, age, energy)
+                            fns.moveThis(newPos, age, energy)
                         } else {
-                            sharkAt(currPos, 0)
+                            fns.removeAt(currPos)
                         }
                     }
                 }
