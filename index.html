@@ -1,0 +1,265 @@
+<!DOCSTYLE html>
+<html>
+    <head>
+        <title>WATOR</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+        <style>
+            table  { table-layout: fixed; width: 400; }
+            tr     { height: 5px; width: 5px }
+            .water { background-color: blue; }
+            .fish  { background-color: orange;  }
+            .shark  { background-color: white;  }
+        </style>
+        <script>
+            var run = false;
+            var cols = 50;
+            var rows = 50;
+            var startFish = 20;
+            var startSharks = 20;
+            var sharkReproAge = 10
+            var sharkEnergyLevel = 8
+            var data = []
+            var sharkData = []
+            function setup() {
+                var table = $('<table>')
+                for (var i = 0; i < rows; i++) {
+                    var rowData = []
+                    var sharkRowData = []
+                    data.push(rowData)
+                    sharkData.push(sharkRowData)
+                    var row = $('<tr>')
+                    table.append(row)
+                    for (var j = 0; j < cols; j++) {
+                        rowData.push(0)
+                        sharkRowData.push(0)
+                        row.append($('<td>').attr('class', 'water'))
+                    }
+                }
+                $('#board').append(table)
+                makeFish()
+                makeSharks()
+                window.setInterval(moveAll, 200);
+            }
+
+            function moveAll() {
+                moveFish()
+                moveSharks()
+                updateUI()
+            }
+
+            function makeFish() {
+                    for (var i = 0; i < startFish; i++ ) {
+                    col = Math.floor(cols * Math.random())
+                    row = Math.floor(rows * Math.random())
+                    $('table tr:eq(' + row + ') td:eq(' + col + ')').attr('class', 'fish')
+                    data[row][col] = 30
+                }
+            }
+
+            function updateUI() {
+                var tableRows = $('table tr')
+                for (var row = 0; row < rows; row++) {
+                    for (var col = 0; col < cols; col++) {
+                        if (sharkData[row][col] > 0) {
+                            tableRows[row].childNodes[col].setAttribute('class', 'shark')
+                        } else if (data[row][col] > 0) {
+                            tableRows[row].childNodes[col].setAttribute('class', 'fish')
+                        } else {
+                            tableRows[row].childNodes[col].setAttribute('class', 'water')
+                        }
+                    }
+                }
+            }
+
+            function nextSpot(isAvailable, currPos) {
+                available = []
+                if (isAvailable(up(currPos))) {
+                    available.push(up(currPos))
+                }
+                if (isAvailable(down(currPos))) {
+                     available.push(down(currPos))
+                 }
+                 if (isAvailable(left(currPos))) {
+                    available.push(left(currPos))
+                }
+                if (isAvailable(right(currPos))) {
+                    available.push(right(currPos))
+                }
+                if (available.length > 0 ){
+                    return available[Math.floor(Math.random() * available.length)]
+                }
+                return null
+            }
+
+            function moveFish() {
+                if (!run) return;
+                for (var row = 0; row < rows; row++) {
+                    for (var col = 0; col < cols; col++) {
+                        if (data[row][col] > 0) {
+                            var currPos = {row: row, col: col}
+                            var newPos = {row: row, col: col}
+                            var hasMoved = true
+                            newPos = nextSpot(waterAt, currPos)
+                            if (newPos == null) {
+                                newPos = currPos
+                                hasMoved = false
+                            }
+
+                            var age = fishAt(currPos)
+                            var shouldNotReproduce = (1 != (age % 7))
+                            if (hasMoved) {
+                                fishAt(newPos, age + 1)
+                                if (shouldNotReproduce) {
+                                    fishAt(currPos, 0)
+                                } else {
+                                    fishAt(currPos, 1)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            function makeSharks() {
+                for (i = 0; i < startSharks; i++ ) {
+                    col = Math.floor(cols * Math.random())
+                    row = Math.floor(rows * Math.random())
+                    console.log("Shark: " + row + "," + col)
+                    $('table tr:eq(' + row + ') td:eq(' + col + ')').attr('class', 'shark')
+                    sharkData[row][col] = sharkEnergyLevel * 16
+                }
+            }
+
+            function up(y,x) {
+                if (x == null) {
+                    x = y['row']
+                    y = y['col']
+                }
+                if( x == 0 ) return {row: rows - 1, col: y }
+                else return {row: x - 1, col: y }
+            }
+            function down(y,x) {
+                if (x == null) {
+                    x = y['row']
+                    y = y['col']
+                }
+                if( x == rows - 1 ) return {row: 0, col: y }
+                else return {row: x + 1, col: y }
+            }
+            function left(y,x) {
+                if (x == null) {
+                    x = y['row']
+                    y = y['col']
+                }
+                if( y == 0 ) return {row: x, col: cols - 1 }
+                else return {row: x, col: y - 1 }
+            }
+            function right(y,x) {
+                if (x == null) {
+                    x = y['row']
+                    y = y['col']
+                }
+                if( y == cols - 1 ) return {row: x, col: 0 }
+                else return {row: x, col: y + 1 }
+            }
+
+            function fishAt(pos, newVal) {
+                if (newVal != null) {
+                    data[pos['row']][pos['col']] = newVal
+                }
+                return data[pos['row']][pos['col']]
+            }
+            function sharkAt(pos, newVal) {
+                if (newVal != null) {
+                    sharkData[pos['row']][pos['col']] = newVal
+                }
+                return sharkData[pos['row']][pos['col']]
+            }
+
+            function fishTo(start, finish) {
+                data[finish['row']][finish['col']] = data[start['row']][start['col']]
+            }
+            function sharkTo(start, finish) {
+                sharkData[finish['row']][finish['col']] = sharkData[start['row']][start['col']]
+            }
+
+            function sharkOrFishAt(pos) {
+                return sharkAt(pos) > 0 || fishAt(pos) > 0
+            }
+            function fishButNotShark(pos) {
+                return sharkAt(pos) == 0 && fishAt(pos) > 0
+            }
+            function waterAt(pos) {
+                return !sharkOrFishAt(pos)
+            }
+
+
+            function sharkEnergy(pos, newEnergyLevel) {
+                var v = Math.floor(sharkAt(pos) / 16)
+                if (newEnergyLevel != null) {
+                    sharkAt(pos, v * 16 + (v % 16))
+                }
+                return v
+            }
+
+            function moveSharks() {
+                if (!run) return;
+                for (var row = 0; row < rows; row++) {
+                    for (var col = 0; col < cols; col++) {
+                        var currPos = {row: row, col: col}
+                        if (sharkEnergy(currPos) > 0) {
+                            var newPos = {row: row, col: col}
+                            var hasMoved = true
+                            newPos = nextSpot(fishAt, currPos)
+                            if (newPos == null) {
+                                newPos = nextSpot(waterAt, currPos)
+                                if (newPos == null) {
+                                    hasMoved = false
+                                    newPos = currPos
+                                }
+                            }
+
+                            var age = sharkAt(currPos) % 16
+                            var energy = sharkEnergy(currPos) - 1
+                            var shouldReproduce = (age == sharkReproAge - 1)
+
+                            if (hasMoved) {
+                                if( shouldReproduce) {
+                                    sharkAt(currPos, sharkEnergyLevel * 16)
+                                } else {
+                                    sharkAt(currPos, 0)
+                                }
+                            }
+                            if (fishAt(newPos) > 0) {
+                                fishAt(newPos, 0)
+                                energy += 3
+                                if (energy > sharkEnergyLevel) {
+                                    energy = sharkEnergyLevel
+                                }
+                            }
+                            if (energy == 0) {
+                                sharkAt(newPos, 0)
+                            } else {
+                                sharkAt(newPos, energy * 16 + ((age + 1) % sharkReproAge))
+                            }
+                        } else {
+                            sharkAt(currPos, 0)
+                        }
+                    }
+                }
+            }
+
+            function toggleRun() {
+                run = !run
+            }
+        </script>
+    </head>
+    <body>
+        <div id="board">
+            <button onclick="toggleRun()">Start/Stop</button>
+        </div>
+        <script>
+            $(document).ready(setup);
+        </script>
+    </body>
+</html>
