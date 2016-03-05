@@ -15,11 +15,14 @@
             var cols = 50;
             var rows = 50;
             var startFish = 20;
+            var sharkReproAge = 10
+            var fishEnergyLevel = 1
             var startSharks = 20;
             var sharkReproAge = 10
             var sharkEnergyLevel = 8
             var data = []
             var sharkData = []
+
             function setup() {
                 var table = $('<table>')
                 for (var i = 0; i < rows; i++) {
@@ -36,8 +39,8 @@
                     }
                 }
                 $('#board').append(table)
-                makeFish()
-                makeSharks()
+                make(data, startFish, 'fish', fishEnergyLevel)
+                make(sharkData, startSharks, 'shark', sharkEnergyLevel * 16)
                 window.setInterval(moveAll, 200);
             }
 
@@ -47,12 +50,12 @@
                 updateUI()
             }
 
-            function makeFish() {
-                    for (var i = 0; i < startFish; i++ ) {
+            function make(data, numberOf, className, energyLevel) {
+                for (var i = 0; i < numberOf; i++ ) {
                     col = Math.floor(cols * Math.random())
                     row = Math.floor(rows * Math.random())
-                    $('table tr:eq(' + row + ') td:eq(' + col + ')').attr('class', 'fish')
-                    data[row][col] = 30
+                    $('table tr')[row].childNodes[col].setAttribute('class', className)
+                    data[row][col] = energyLevel
                 }
             }
 
@@ -117,16 +120,6 @@
                             }
                         }
                     }
-                }
-            }
-
-            function makeSharks() {
-                for (i = 0; i < startSharks; i++ ) {
-                    col = Math.floor(cols * Math.random())
-                    row = Math.floor(rows * Math.random())
-                    console.log("Shark: " + row + "," + col)
-                    $('table tr:eq(' + row + ') td:eq(' + col + ')').attr('class', 'shark')
-                    sharkData[row][col] = sharkEnergyLevel * 16
                 }
             }
 
