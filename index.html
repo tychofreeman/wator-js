@@ -82,12 +82,16 @@
                 var tableRows = $('table tr')
                 for (var row = 0; row < rows; row++) {
                     for (var col = 0; col < cols; col++) {
-                        if (sharkData[row][col] > 0) {
-                            tableRows[row].childNodes[col].setAttribute('class', 'shark')
-                        } else if (data[row][col] > 0) {
-                            tableRows[row].childNodes[col].setAttribute('class', 'fish')
+                        var pos = {row: row, col: col}
+                        var setClass = function(pos, className) {
+                            tableRows[pos.row].childNodes[pos.col].setAttribute('class', className)
+                        }
+                        if (sharkAt(pos)) {
+                            setClass(pos, 'shark')
+                        } else if (fishAt(pos)) {
+                            setClass(pos, 'fish')
                         } else {
-                            tableRows[row].childNodes[col].setAttribute('class', 'water')
+                            setClass(pos, 'water')
                         }
                     }
                 }
