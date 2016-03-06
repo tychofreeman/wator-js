@@ -17,7 +17,11 @@
             google.charts.setOnLoadCallback(drawChart);
 
             var chartData;
-            var addRow = function() {};
+            var allData = []
+            var chartData2;
+            var addRows = function() {};
+            var showAllDataChart = function() {};
+
             function drawChart() {
                 chartData = google.visualization.arrayToDataTable([
                     ['Tick', 'Fish', 'Sharks'],
@@ -25,14 +29,43 @@
                 ]);
 
               var options = {
-                  title: 'Toroid Population',
+                  title: 'Toroid Population - Recent',
+                  hAxis: { textPosition: 'none' },
+                  vAxis: { textPosition: 'none' },
                   legend: { position: 'bottom' }
               };
 
               var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
-              addRow = function(rowData) {
-                  chartData.addRows([rowData])
+              var count = 0;
+              addRows = function(rowData) {
+                  if (count > 40) {
+                    for (var i = 0; i < rowData.length; i++ ) {
+                        chartData.removeRow(0)
+                    }
+                  } else {
+                    count++
+                  }
+                  chartData.addRows(rowData)
                   chart.draw(chartData, options)
+                  
+              }
+
+              var chart2 = new google.visualization.LineChart(document.getElementById('all-data-chart'));
+              var options2 = {
+                  title: 'Toroid Population - All Time',
+                  hAxis: { textPosition: 'none' },
+                  vAxis: { textPosition: 'none' },
+                  legend: { position: 'bottom' }
+              };
+              chartData2 = google.visualization.arrayToDataTable([
+                ['Tick', 'Fish', 'Sharks'],
+                [0,0,0]
+              ]);
+
+              showAllDataChart = function() {
+                chartData2.addRows(allData);
+                allData = []
+                chart2.draw(chartData2, options2)
               }
 
             }
@@ -90,17 +123,23 @@
 
                 make(data, startFish, 'fish', fishEnergyLevel)
                 make(sharkData, startSharks, 'shark', sharkEnergyLevel * 16)
-
-                window.setInterval(moveAll, 200);
+                
+                window.setInterval(moveAll, 20);
             }
 
             var tick = 0
+            var multipleRows = []
             function moveAll() {
                 if (!run) return
                 tick++
                 move(fishFns)
                 move(sharkFns)
-                addRow([tick, numFish, -1 * numSharks])
+                allData.push([tick, numFish, -1 * numSharks])
+                multipleRows.push([tick, numFish, -1 * numSharks])
+                if (0 == tick % 5) {
+                    addRows(multipleRows)
+                    multipleRows = []
+                }
                 updateUI()
             }
 
@@ -255,6 +294,9 @@
 
             function toggleRun() {
                 run = !run
+                if (!run) {
+                    showAllDataChart()
+                }
             }
         </script>
     </head>
@@ -266,5 +308,6 @@
             $(document).ready(setup);
         </script>
         <div id="curve_chart"></div>
+        <div id="all-data-chart"></div>
     </body>
 </html>
