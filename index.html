@@ -74,6 +74,7 @@
             var cols = 50;
             var rows = 50;
             var startFish = 20;
+            var fishReproAge = 7
             var sharkReproAge = 10
             var fishEnergyLevel = 1
             var startSharks = 20;
@@ -81,17 +82,18 @@
             var sharkEnergyLevel = 8
             var numSharks = 0;
             var numFish = 0;
-            var data = []
-            var sharkData = []
+            var data;
+            var sharkData;
+            var speed = 20;
 
             var fishFns = {
                 energyOf: function (currPos) { return fishAt(currPos) > 0 ? 1 : 0 },
                 decideMove: function (currPos) { return nextSpot(waterAt, currPos) },
                 ageOf: function (currPos) { return fishAt(currPos) },
-                shouldReproduce: function(age) { return (1 == (age % 7)) },
-                makeNew: function (age) { return (1 == (age % 7)) },
+                shouldReproduce: function(age) { return (1 == (age % fishReproAge)) },
+                makeNew: function (age) { return (1 == (age % fishReproAge)) },
                 removeAt: function (currPos) { fishAt(currPos, 0) },
-                moveThis: function moveThisFish(newPos, age) { fishAt(newPos, (age % 7) + 1) }
+                moveThis: function moveThisFish(newPos, age) { fishAt(newPos, (age % fishReproAge) + 1) }
             }
 
             var sharkFns = {
@@ -104,8 +106,23 @@
                 moveThis: moveThisShark
             }
 
+            function setSlider(id, value) {
+                document.getElementById(id).setAttribute('value', value);
+            }
+
             function setup() {
-                var table = $('<table>')
+                $('#viewport').remove()
+                setSlider('fish-repro-age', fishReproAge);
+                setSlider('shark-repro-age', sharkReproAge);
+                setSlider('shark-starvation-age', sharkEnergyLevel);
+                setSlider('shark-starting-count', startSharks);
+                setSlider('fish-starting-count', startFish);
+                setSlider('toroid-rows', rows)
+                setSlider('toroid-cols', cols)
+                var table = $('<table>').attr('id', 'viewport')
+                table.css('width', cols * 8)
+                data = []
+                sharkData = []
                 for (var i = 0; i < rows; i++) {
                     var rowData = []
                     var sharkRowData = []
@@ -124,7 +141,7 @@
                 make(data, startFish, 'fish', fishEnergyLevel)
                 make(sharkData, startSharks, 'shark', sharkEnergyLevel * 16)
                 
-                window.setInterval(moveAll, 20);
+                window.setInterval(moveAll, speed);
             }
 
             var tick = 0
@@ -152,7 +169,7 @@
             }
 
             function updateUI() {
-                var tableRows = $('table tr')
+                var tableRows = $('#board table tr')
                 numSharks = 0;
                 numFish = 0;
                 for (var row = 0; row < rows; row++) {
@@ -221,9 +238,13 @@
             }
             function at(data, pos, newVal) {
                 if (newVal != null) {
-                    data[pos['row']][pos['col']] = newVal
+                    data[pos.row][pos.col] = newVal
                 }
-                return data[pos['row']][pos['col']]
+                try {
+                return data[pos.row][pos.col]
+                } catch (e) {
+                    console.log(pos.row + "," + pos.col)
+                }
             }
 
             function waterAt(pos) {
@@ -295,14 +316,60 @@
             function toggleRun() {
                 run = !run
                 if (!run) {
+                    $('#knobs input').removeAttr('disabled')
                     showAllDataChart()
+                } else {
+                    $('#knobs input').attr('disabled', 'disabled;')
+                    $('#toroid-rows').parent().parent().remove()
+                    $('#toroid-cols').parent().parent().remove()
+                }
+            }
+
+            function changeFishReproAge(newValue) {
+                fishReproAge = parseInt(newValue)
+            }
+            function changeSharkReproAge(newValue) {
+                sharkReproAge = parseInt(newValue)
+            }
+            function changeSharkStarveAge(newValue) {
+                sharkEnergyLevel = parseInt(newValue)
+            }
+            function changeFishNum(newValue) {
+                startingFish = parseInt(newValue)
+            }
+            function changeSharkNum(newValue) {
+                startingShark = parseInt(newValue)
+            }
+            function changeRows(newValue) {
+                if (tick == 0) {
+                    rows = parseInt(newValue)
+                    setup()
+                }
+            }
+            function changeCols(newValue) {
+                if (tick == 0) {
+                    cols = parseInt(newValue)
+                    setup()
                 }
             }
         </script>
     </head>
     <body>
-        <div id="board">
+        <div id="controls">
             <button onclick="toggleRun()">Start/Stop</button>
+            <form style="display:block;" id="knobs" action="">
+            <table>
+            <tr><td><label for="fish-repro-age">Fish Repro Age</label></td><td><input type="range" id="fish-repro-age" min="0" max="30" onchange="changeFishReproAge(event.target.value)"></input></td></tr>
+            <tr><td><label for="shark-repro-age">Shark Repro Age</label></td><td><input type="range" id="shark-repro-age" min="0" max="30" onchange="changeSharkReproAge(event.target.value)"></input></td></tr>
+            <tr><td><label for="shark-starvation-age">Shark Starvation Age</label></td><td><input type="range" id="shark-starvation-age" min="0" max="30" onchange="changeSharkStarveAge(event.target.value)"></input></td></tr>
+            <tr><td><label for="shark-starting-count">Shark Starting Count</label></td><td><input type="range" id="shark-starting-count" min="0" max="300" onchange="changeSharkNum(event.target.value)"></input></td></tr>
+            <tr><td><label for="fish-starting-count">Fish Starting Count</label></td><td><input type="range" id="fish-starting-count" min="0" max="300" onchange="changeFishNum(event.target.value)"></input></td></tr>
+            <tr><td><label for="toroid-rows">Toroid Rows</label></td><td><input type="range" id="toroid-rows" min="20" max="80" onchange="changeRows(event.target.value)"></input></td></tr>
+            <tr><td><label for="toroid-cols">Toroid Columns</label></td><td><input type="range" id="toroid-cols" min="20" max="80" onchange="changeCols(event.target.value)"></input></td></tr>
+            </table>
+            </form>
+        </div>
+        <div id="board">
         </div>
         <script>
             $(document).ready(setup);
