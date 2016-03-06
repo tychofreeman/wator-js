@@ -10,7 +10,33 @@
             .fish  { background-color: orange;  }
             .shark  { background-color: white;  }
         </style>
-        <script>
+
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="text/javascript">
+            google.charts.load('current', {'packages':['corechart']});
+            google.charts.setOnLoadCallback(drawChart);
+
+            var chartData;
+            var addRow = function() {};
+            function drawChart() {
+                chartData = google.visualization.arrayToDataTable([
+                    ['Tick', 'Fish', 'Sharks'],
+                    [0,  0,      0]
+                ]);
+
+              var options = {
+                  title: 'Toroid Population',
+                  legend: { position: 'bottom' }
+              };
+
+              var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+              addRow = function(rowData) {
+                  chartData.addRows([rowData])
+                  chart.draw(chartData, options)
+              }
+
+            }
+
             var run = false;
             var cols = 50;
             var rows = 50;
@@ -20,6 +46,8 @@
             var startSharks = 20;
             var sharkReproAge = 10
             var sharkEnergyLevel = 8
+            var numSharks = 0;
+            var numFish = 0;
             var data = []
             var sharkData = []
 
@@ -66,9 +94,13 @@
                 window.setInterval(moveAll, 200);
             }
 
+            var tick = 0
             function moveAll() {
+                if (!run) return
+                tick++
                 move(fishFns)
                 move(sharkFns)
+                addRow([tick, numFish, -1 * numSharks])
                 updateUI()
             }
 
@@ -82,6 +114,8 @@
 
             function updateUI() {
                 var tableRows = $('table tr')
+                numSharks = 0;
+                numFish = 0;
                 for (var row = 0; row < rows; row++) {
                     for (var col = 0; col < cols; col++) {
                         var pos = {row: row, col: col}
@@ -90,8 +124,10 @@
                         }
                         if (sharkAt(pos)) {
                             setClass(pos, 'shark')
+                            numSharks++
                         } else if (fishAt(pos)) {
                             setClass(pos, 'fish')
+                            numFish++
                         } else {
                             setClass(pos, 'water')
                         }
@@ -187,7 +223,6 @@
             }
 
             function move(fns) {
-                if (!run) return;
                 for (var row = 0; row < rows; row++) {
                     for (var col = 0; col < cols; col++) {
                         var currPos = {row: row, col: col}
@@ -230,5 +265,6 @@
         <script>
             $(document).ready(setup);
         </script>
+        <div id="curve_chart"></div>
     </body>
 </html>
