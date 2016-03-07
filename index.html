@@ -84,7 +84,8 @@
             var numFish = 0;
             var data;
             var sharkData;
-            var speed = 20;
+            var interval;
+            var speed = 750;
 
             var fishFns = {
                 energyOf: function (currPos) { return fishAt(currPos) > 0 ? 1 : 0 },
@@ -141,7 +142,6 @@
                 make(data, startFish, 'fish', fishEnergyLevel)
                 make(sharkData, startSharks, 'shark', sharkEnergyLevel * 16)
                 
-                window.setInterval(moveAll, speed);
             }
 
             var tick = 0
@@ -153,10 +153,8 @@
                 move(sharkFns)
                 allData.push([tick, numFish, -1 * numSharks])
                 multipleRows.push([tick, numFish, -1 * numSharks])
-                if (0 == tick % 5) {
                     addRows(multipleRows)
                     multipleRows = []
-                }
                 updateUI()
             }
 
@@ -220,7 +218,7 @@
 
             function randomElementOf(available) {
                 if (available.length > 0 ){
-                    return available[Math.floor(Math.random() * available.length)]
+                    return available[available.length - Math.floor(Math.random() * available.length) - 1]
                 }
                 return null
             }
@@ -316,12 +314,15 @@
             function toggleRun() {
                 run = !run
                 if (!run) {
+                    clearInterval(interval);
                     $('#knobs input').removeAttr('disabled')
                     showAllDataChart()
                 } else {
                     $('#knobs input').attr('disabled', 'disabled;')
+                    $('#speed-of-simulation').removeAttr('disabled')
                     $('#toroid-rows').parent().parent().remove()
                     $('#toroid-cols').parent().parent().remove()
+                    interval = window.setInterval(moveAll, speed);
                 }
             }
 
@@ -352,6 +353,11 @@
                     setup()
                 }
             }
+            function changeSpeed(newValue) {
+                clearInterval(interval);
+                speed = parseInt(newValue)
+                interval = setInterval(moveAll, speed)
+            }
         </script>
     </head>
     <body>
@@ -366,6 +372,7 @@
             <tr><td><label for="fish-starting-count">Fish Starting Count</label></td><td><input type="range" id="fish-starting-count" min="0" max="300" onchange="changeFishNum(event.target.value)"></input></td></tr>
             <tr><td><label for="toroid-rows">Toroid Rows</label></td><td><input type="range" id="toroid-rows" min="20" max="80" onchange="changeRows(event.target.value)"></input></td></tr>
             <tr><td><label for="toroid-cols">Toroid Columns</label></td><td><input type="range" id="toroid-cols" min="20" max="80" onchange="changeCols(event.target.value)"></input></td></tr>
+            <tr><td><label for="speed-of-simulation">Simulation Speed (msec/frame)</label></td><td><input type="range" id="speed-of-simulation" min="50" max="1000" value="150" onchange="changeSpeed(event.target.value)"></input></td></tr>
             </table>
             </form>
         </div>
