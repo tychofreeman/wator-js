@@ -74,8 +74,8 @@
             var cols = 50;
             var rows = 50;
             var startFish = 20;
-            var fishReproAge = 7
-            var sharkReproAge = 10
+            var fishReproAge = 3
+            var sharkReproAge = 25
             var fishEnergyLevel = 1
             var startSharks = 20;
             var sharkReproAge = 10
@@ -85,14 +85,15 @@
             var data;
             var sharkData;
             var interval;
-            var speed = 750;
+            var speed = 50;
+            var sharkEnergyMultiplier = 256;
 
             var fishFns = {
                 energyOf: function (currPos) { return fishAt(currPos) > 0 ? 1 : 0 },
                 decideMove: function (currPos) { return nextSpot(waterAt, currPos) },
                 ageOf: function (currPos) { return fishAt(currPos) },
-                shouldReproduce: function(age) { return (1 == (age % fishReproAge)) },
-                makeNew: function (age) { return (1 == (age % fishReproAge)) },
+                shouldReproduce: function(age) { return ((fishReproAge - 1) == (age % fishReproAge)) },
+                makeNew: function (currPos) { return fishAt(currPos, 1) },
                 removeAt: function (currPos) { fishAt(currPos, 0) },
                 moveThis: function moveThisFish(newPos, age) { fishAt(newPos, (age % fishReproAge) + 1) }
             }
@@ -100,9 +101,9 @@
             var sharkFns = {
                 energyOf: sharkEnergy,
                 decideMove: sharkDecideMove,
-                ageOf: function (currPos) { return sharkAt(currPos) % 16 },
+                ageOf: function (currPos) { return sharkAt(currPos) % sharkEnergyMultiplier },
                 shouldReproduce: function (age) { return age == sharkReproAge - 1 },
-                makeNew: function (currPos) { sharkAt(currPos, sharkEnergyLevel * 16) },
+                makeNew: function (currPos) { sharkAt(currPos, sharkEnergyLevel * sharkEnergyMultiplier) },
                 removeAt: function (currPos) { sharkAt(currPos, 0) },
                 moveThis: moveThisShark
             }
@@ -120,6 +121,9 @@
                 setSlider('fish-starting-count', startFish);
                 setSlider('toroid-rows', rows)
                 setSlider('toroid-cols', cols)
+                $('#toroid-rows').parent().parent().show()
+                $('#toroid-cols').parent().parent().show()
+                setSlider('speed-of-simulation', speed)
                 var table = $('<table>').attr('id', 'viewport')
                 table.css('width', cols * 8)
                 data = []
@@ -140,7 +144,7 @@
                 $('#board').append(table)
 
                 make(data, startFish, 'fish', fishEnergyLevel)
-                make(sharkData, startSharks, 'shark', sharkEnergyLevel * 16)
+                make(sharkData, startSharks, 'shark', sharkEnergyLevel * sharkEnergyMultiplier)
                 
             }
 
@@ -252,9 +256,9 @@
             }
 
             function sharkEnergy(pos, newEnergyLevel) {
-                var v = Math.floor(sharkAt(pos) / 16)
+                var v = Math.floor(sharkAt(pos) / sharkEnergyMultiplier)
                 if (newEnergyLevel != null) {
-                    sharkAt(pos, v * 16 + (v % 16))
+                    sharkAt(pos, v * sharkEnergyMultiplier + (v % sharkEnergyMultiplier))
                 }
                 return v - 1
             }
@@ -270,7 +274,7 @@
                 if (energy == 0) {
                     sharkAt(newPos, 0)
                 } else {
-                    sharkAt(newPos, energy * 16 + ((age + 1) % sharkReproAge))
+                    sharkAt(newPos, energy * sharkEnergyMultiplier + ((age + 1) % sharkReproAge))
                 }
             }
 
@@ -318,12 +322,14 @@
                 if (!run) {
                     clearInterval(interval);
                     $('#knobs input').removeAttr('disabled')
+                    $('#reset').removeAttr('disabled')
                     showAllDataChart()
                 } else {
+                    $('#reset').attr('disabled', 'disabled')
                     $('#knobs input').attr('disabled', 'disabled;')
                     $('#speed-of-simulation').removeAttr('disabled')
-                    $('#toroid-rows').parent().parent().remove()
-                    $('#toroid-cols').parent().parent().remove()
+                    $('#toroid-rows').parent().parent().hide()
+                    $('#toroid-cols').parent().parent().hide()
                     interval = window.setInterval(moveAll, speed);
                 }
             }
@@ -365,6 +371,7 @@
     <body>
         <div id="controls">
             <button onclick="toggleRun()">Start/Stop</button>
+            <button id='reset' onclick="setup()">Reset</button>
             <form style="display:block;" id="knobs" action="">
             <table>
             <tr><td><label for="fish-repro-age">Fish Repro Age</label></td><td><input type="range" id="fish-repro-age" min="0" max="30" onchange="changeFishReproAge(event.target.value)"></input></td></tr>
