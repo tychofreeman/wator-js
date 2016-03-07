@@ -203,10 +203,12 @@
 
             function allPossibleNextPositions(isAvailableFn, currPos) {
                 available = []
-                fns = [ dirFn(dec, identity), 
-                        dirFn(inc, identity),
+                fns = [
                         dirFn(identity, dec),
-                        dirFn(identity, inc)]
+                        dirFn(inc, identity),
+                        dirFn(dec, identity), 
+                        dirFn(identity, inc)
+                        ]
                 for (var i = 0; i < fns.length; i++) {
                     possibleNextPos = fns[i](currPos)
                     if (isAvailableFn(possibleNextPos)) {
