@@ -373,6 +373,7 @@
             <button onclick="toggleRun()">Start/Stop</button>
             <button id='reset' onclick="setup()">Reset</button>
             <form style="display:block;" id="knobs" action="">
+                <span style="display:inline-block">
             <table>
             <tr><td><label for="fish-repro-age">Fish Repro Age</label></td><td><input type="range" id="fish-repro-age" min="0" max="30" onchange="changeFishReproAge(event.target.value)"></input></td></tr>
             <tr><td><label for="shark-repro-age">Shark Repro Age</label></td><td><input type="range" id="shark-repro-age" min="0" max="30" onchange="changeSharkReproAge(event.target.value)"></input></td></tr>
@@ -383,6 +384,14 @@
             <tr><td><label for="toroid-cols">Toroid Columns</label></td><td><input type="range" id="toroid-cols" min="20" max="80" onchange="changeCols(event.target.value)"></input></td></tr>
             <tr><td><label for="speed-of-simulation">Simulation Speed (msec/frame)</label></td><td><input type="range" id="speed-of-simulation" min="50" max="1000" value="150" onchange="changeSpeed(event.target.value)"></input></td></tr>
             </table>
+        </span>
+        <span style="display:inline-block">
+            <table style="width:100px;">
+                <tr><td>Fish:</td><td class="fish" style="width:20px; border: 1px solid black;"></td></tr>
+                <tr><td>Shark:</td><td class="shark" style="width:20px; border: 1px solid black;"></td></tr>
+                <tr><td>Water:</td><td class="water" style="width:20px; border: 1px solid black;"></td></tr>
+            </table>
+        </span>
             </form>
         </div>
         <div id="board">
